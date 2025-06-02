@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  rstudio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rstudio-container
+    ports:
+      - "8787:8787" # Map RStudio server port
+    environment:
+      - PASSWORD=ivh#1136 # Set RStudio password
+    volumes:
+      - /home/aderson/projects/R/monografia-ufpel:/usr/src/app
