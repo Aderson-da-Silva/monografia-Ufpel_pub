@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+gdfpd2_cache
+*_data_cache_*
+*_data_cache
+gdfpd2_cache_ITR
+*.zip
+*.png
+teste*
+teste.R
