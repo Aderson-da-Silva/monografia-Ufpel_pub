@@ -111,6 +111,46 @@ all_returns_markovitz_yearly_bal_info <- daily_B_H_return_markovitz_yearly_bal_i
     media_sharpe_ratio = mean(sharp_ratio))
 
 
+w_groups_all_returns_markovitz <- daily_w_groups_return_markovitz_info$annual_returns %>%
+  full_join(daily_w_groups_return_markovitz$annual_returns) %>%
+  full_join(daily_w_groups_return_markovitz_yearly_bal_info$annual_returns) %>%
+  full_join(daily_w_groups_return_markovitz_yearly_bal$annual_returns) %>%
+  group_by(Ano) %>%
+  reframe(
+    media_retorno = mean(retorno_excedente),
+    media_sharpe_ratio = mean(sharp_ratio)
+  )
+
+all_not_w_groups_markovitz <- all_returns_markovitz %>%
+  full_join(all_returns_markovitz_info) %>%
+  full_join(all_returns_markovitz_yearly_bal) %>%
+  full_join(all_returns_markovitz_yearly_bal_info) %>%
+  group_by(Ano) %>%
+  reframe(
+    media_retorno = mean(media_retorno),
+    media_sharpe_ratio = mean(media_sharpe_ratio)
+  )
+
+all_returns_markovitz_difference <- tibble(
+  Ano = daily_w_groups_return_markovitz_info$annual_returns$Ano,
+  info = daily_w_groups_return_markovitz_info$annual_returns$retorno_excedente - daily_w_groups_return_markovitz$annual_returns$retorno_excedente,
+  info_sharpe = daily_w_groups_return_markovitz_info$annual_returns$sharp_ratio - daily_w_groups_return_markovitz$annual_returns$sharp_ratio,
+  
+  info_bal = daily_w_groups_return_markovitz_yearly_bal_info$annual_returns$retorno_excedente - daily_w_groups_return_markovitz_yearly_bal$annual_returns$retorno_excedente,
+  info_bal_sharpe = daily_w_groups_return_markovitz_yearly_bal_info$annual_returns$sharp_ratio - daily_w_groups_return_markovitz_yearly_bal$annual_returns$sharp_ratio,
+  
+  balanced = (daily_w_groups_return_markovitz_yearly_bal_info$annual_returns$retorno_excedente + daily_w_groups_return_markovitz_yearly_bal$annual_returns$retorno_excedente) 
+  - (daily_w_groups_return_markovitz_info$annual_returns$retorno_excedente + daily_w_groups_return_markovitz$annual_returns$retorno_excedente),
+  
+  balanced_sharpe = (daily_w_groups_return_markovitz_yearly_bal_info$annual_returns$sharp_ratio + daily_w_groups_return_markovitz_yearly_bal$annual_returns$sharp_ratio) 
+  - (daily_w_groups_return_markovitz_info$annual_returns$sharp_ratio + daily_w_groups_return_markovitz$annual_returns$sharp_ratio),
+  
+  
+  w_groups_vs_groups_returns = w_groups_all_returns_markovitz$media_retorno - all_not_w_groups_markovitz$media_retorno,
+  w_groups_vs_groups_sharpe = w_groups_all_returns_markovitz$media_sharpe_ratio - all_not_w_groups_markovitz$media_sharpe_ratio
+)
+
+
 #----------------------------------------------------  PONDERADO PELO VALOR DE MERCADO ---------------------------------------------------------------------------------------
   
   
