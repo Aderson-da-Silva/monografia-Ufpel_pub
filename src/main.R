@@ -145,6 +145,7 @@ ibov_returns <- ibov %>%
   select(date, return, Ano) %>% mutate(ticker = "IBOV")
 
 
+
 selic <- selic %>% mutate(year = year(`ref.date`))
 selic_return_annual <- selic %>% 
   group_by(fiscal_year =year(`ref.date`)) %>%
@@ -164,17 +165,26 @@ selic_return_annual_info <- selic %>% mutate(fiscal_year = case_when(
 selic_return_annual_info_acc <- selic_return_annual_info %>% 
   filter(fiscal_year > 2017) %>% 
   mutate(
-    acc_return = cumprod(1+return)-1,
+    accumulated_daily_return = cumprod(1+return)-1,
     daily_return = (1 + return)^(1/238) - 1
-    )
-  
-  
+  )
 
-ibov_returns_anual <- anual_return(ibov_returns)
-ibov_returns_anual_info <- anual_return(ibov_returns, TRUE)
+selic_return_annual_acc <- selic_return_annual %>% 
+  filter(fiscal_year > 2017) %>% 
+  mutate(
+    accumulated_daily_return = cumprod(1+return)-1,
+    daily_return = (1 + return)^(1/238) - 1
+  )
+
+
+ibov_returns_anual <- anual_return(ibov_returns, selic_data = selic_return_annual)
+ibov_returns_anual_info <- anual_return(ibov_returns, selic_data = selic_return_annual_info, 
+                                        info = TRUE, 
+                                        ano = 2018)
 
 daily_ibov_returns_anual <- daily_anual_return(ibov_returns) 
 daily_ibov_returns_anual_info <- daily_anual_return(ibov_returns, TRUE)
+
 #-----------  Usando ponderação por valor de mercado ----------------------------------------------------
 
 
@@ -199,6 +209,23 @@ source("src/calc_algs/only_markovitz_calc.R")
 
 #-------------------------------------- Calculando retorno acumulado de todas as carteiras ------------------------------------------------------
 source("src/calc_algs/final_calc.R")
+
+selic_return_annual_info_acc <- daily_B_H_return_markovitz_yearly_bal_info$daily_returns %>%
+  select(Ano_fiscal, date) %>% 
+  left_join(selic_return_annual_info_acc, join_by("Ano_fiscal" == "fiscal_year")) %>%
+  select(-return) %>% 
+  mutate(
+    accumulated_daily_return = cumprod(1+daily_return)-1
+  )
+
+
+selic_return_annual_acc <-  daily_B_H_return_markovitz_yearly_bal$daily_returns  %>%
+  select(Ano_fiscal, date) %>% 
+  left_join(selic_return_annual_acc, join_by("Ano_fiscal" == "fiscal_year")) %>%
+  select(-return) %>% 
+  mutate(
+    accumulated_daily_return = cumprod(1+daily_return)-1
+  )
 
 
 # Combinar os dados em formato longo

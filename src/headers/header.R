@@ -378,28 +378,58 @@ daily_return <- function(data, portifolio, ano = 2018, INFO = FALSE, TRI = FALSE
     
   return(tmp)
 }
-
-anual_return <- function(data, info = FALSE, ano = 2018) {
+anual_return <- function(data, selic_data = NULL, info = FALSE, ano = 2018) {
   if(info == TRUE){
     tmp <- tibble()
     
     for(i in ano:2024){
-     ano_fiscal <- data %>%
+      ano_fiscal <- data %>%
         filter((month(date) >= 4 & Ano == i) | (month(date) <= 3 & Ano == i+1)) %>% 
         group_by(ticker) %>%
         summarise(
-          retorno =  prod(1 + return, na.rm = TRUE) - 1
-        ) %>% mutate(Ano = i)
-     
+          retorno = prod(1 + return, na.rm = TRUE) - 1,
+          risco_anualizado = sd(return, na.rm = TRUE) * sqrt(252),
+          .groups = 'drop'
+        ) %>% 
+        mutate(Ano = i)
+      
       tmp <- bind_rows(tmp, ano_fiscal)
     }
-  }else {
+    
+    # Usar selic_return_annual_info se fornecido
+    if(!is.null(selic_data)) {
+      tmp <- tmp %>%
+        left_join(selic_data %>% select(fiscal_year, selic_return = return), 
+                  by = c("Ano" = "fiscal_year")) %>%
+        mutate(
+          sharpe_ratio = ifelse(risco_anualizado != 0, 
+                                (retorno - selic_return) / risco_anualizado, 
+                                NA)
+        )
+    }
+    
+  } else {
     tmp <- data %>%
       group_by(Ano, ticker) %>% 
-      summarise( 
-        retorno =  prod(1 + return, na.rm = TRUE) - 1
+      summarise(
+        retorno = prod(1 + return, na.rm = TRUE) - 1,
+        risco_anualizado = sd(return, na.rm = TRUE) * sqrt(252),
+        .groups = 'drop'
       )
+    
+    # Usar selic_return_annual se fornecido
+    if(!is.null(selic_data)) {
+      tmp <- tmp %>%
+        left_join(selic_data %>% select(fiscal_year, selic_return = return), 
+                  by = c("Ano" = "fiscal_year")) %>%
+        mutate(
+          sharpe_ratio = ifelse(risco_anualizado != 0, 
+                                (retorno - selic_return) / risco_anualizado, 
+                                NA)
+        )
+    }
   }
+  
   return(tmp)
 }
 
